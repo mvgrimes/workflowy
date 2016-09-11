@@ -2,6 +2,7 @@ _ = require 'lodash'
 Q = require 'q'
 debug = require('debug')
 request = require('request')
+utils = require './lib/utils'
 
 # decorate request module
 request.use = (modules) ->
@@ -11,20 +12,6 @@ request.use [
   # require('request-debug')
   require('./lib/request-throttle')(1000)
 ]
-
-utils =
-  getTimestamp: (meta) ->
-    Math.floor (Date.now() - meta.projectTreeData.mainProjectTreeInfo.dateJoinedTimestampInSeconds) / 60
-
-  makePollId: ->
-    _.sample('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('')
-
-  checkForErrors: ([resp, body]) ->
-    if 300 <= resp.statusCode < 600
-      throw new Error "Error with request #{resp.request.uri.href}: #{resp.statusCode}"
-    if error = body.error
-      throw new Error "Error with request #{resp.request.uri.href}: #{error}"
-    return
 
 module.exports = class Workflowy
   @clientVersion: 18
@@ -37,13 +24,9 @@ module.exports = class Workflowy
   constructor: (@username, @password, jar) ->
     @jar = if jar then request.jar(jar) else request.jar()
     @request = request.defaults {@jar, json: true}
-
-    @_requests = 0
     @_lastTransactionId = null
-    @refresh()
 
   login: ->
-    ++@_requests
     Q.ninvoke @request,
       'post'
       url: Workflowy.urls.login
@@ -58,7 +41,6 @@ module.exports = class Workflowy
 
   refresh: ->
     meta = =>
-      ++@_requests
       Q.ninvoke @request,
         'get'
         url: Workflowy.urls.meta
@@ -81,9 +63,9 @@ module.exports = class Workflowy
       result = []
 
       addChildren = (arr, parentId) ->
-        result.push arr...
         for child in arr
           child.parentId = parentId
+          result.push child
           addChildren children, child.id if children = child.ch
         return
 
@@ -97,7 +79,6 @@ module.exports = class Workflowy
 
       operation.client_timestamp = timestamp for operation in operations
 
-      ++@_requests
       Q.ninvoke @request,
         'post'
         url: Workflowy.urls.update
@@ -119,9 +100,12 @@ module.exports = class Workflowy
   # @returns an array of nodes that match the given string, regex or function
   ###
   find: (search, completed) ->
-    unless search
+    @meta || @refresh()
+
+    unless !!search
+      condition = -> true
     else if _.isString search
-      condition = (node) -> node.nm is search
+      condition = (node) -> node.nm.indexOf(search) isnt -1
     else if _.isRegExp search
       condition = (node) -> search.test node.nm
     else if _.isFunction search
@@ -133,13 +117,15 @@ module.exports = class Workflowy
     if completed?
       originalCondition = condition
       condition = (node) ->
-        (_.has(node, 'cp') is !!completed) and originalCondition node
+        (node.cp? is !!completed) and originalCondition node
 
     @nodes.then (nodes) ->
       nodes = _.filter nodes, condition if condition
       nodes
 
   delete: (nodes) ->
+    @meta || @refresh()
+
     nodes = [nodes] unless _.isArray nodes
 
     operations = for node in nodes
@@ -157,6 +143,8 @@ module.exports = class Workflowy
       return
 
   complete: (nodes, tf=true) ->
+    @meta || @refresh()
+
     nodes = [nodes] unless _.isArray nodes
 
     operations = for node in nodes
@@ -178,6 +166,8 @@ module.exports = class Workflowy
       return
 
   update: (nodes, newNames) ->
+    @meta || @refresh()
+
     unless _.isArray nodes
       nodes = [nodes]
       newNames = [newNames]
@@ -191,9 +181,12 @@ module.exports = class Workflowy
         previous_last_modified: node.lm
         previous_name: node.nm
 
-    @_update operations
-    .then ([resp,body,timestamp]) =>
-      for node, i in nodes
-        node.nm = newNames[i]
-        node.lm = timestamp
-      return
+    if operations.length > 0
+      @_update operations
+      .then ([resp,body,timestamp]) =>
+        for node, i in nodes
+          node.nm = newNames[i]
+          node.lm = timestamp
+        return
+    else
+      @meta
