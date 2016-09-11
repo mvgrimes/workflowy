@@ -1,7 +1,6 @@
 _ = require 'lodash'
 Q = require 'q'
-request = require 'request'
-
+request = require('request')
 
 utils =
   getTimestamp: (meta) ->
@@ -18,7 +17,7 @@ utils =
     return
 
 module.exports = class Workflowy
-  @clientVersion: 14
+  @clientVersion: 18
 
   @urls:
     login: 'https://workflowy.com/accounts/login/'
@@ -29,9 +28,13 @@ module.exports = class Workflowy
     @jar = if jar then request.jar(jar) else request.jar()
     @request = request.defaults {@jar, json: true}
 
+    @_requests = 0
     @_lastTransactionId = null
+    @refresh()
 
-    @_login = Q.ninvoke @request,
+  login: ->
+    ++@_requests
+    Q.ninvoke @request,
       'post'
       url: Workflowy.urls.login
       form: {@username, @password}
@@ -43,17 +46,18 @@ module.exports = class Workflowy
       console.error "Error logging in: ", err
       throw err
 
-    @refresh()
-
-
   refresh: ->
-    @meta = @_login.then =>
+    meta = =>
+      ++@_requests
       Q.ninvoke @request,
         'get'
         url: Workflowy.urls.meta
       .then ([resp,body]) ->
         utils.checkForErrors arguments...
         body
+
+    @meta = meta().fail (err) =>
+      @login().then meta
       .fail (err) ->
         console.error "Error fetching document root:", err
         throw err
@@ -83,6 +87,7 @@ module.exports = class Workflowy
 
       operation.client_timestamp = timestamp for operation in operations
 
+      ++@_requests
       Q.ninvoke @request,
         'post'
         url: Workflowy.urls.update
@@ -98,7 +103,6 @@ module.exports = class Workflowy
         utils.checkForErrors arguments...
         @_lastTransactionId = body.results[0].new_most_recent_operation_transaction_id
         [resp, body, timestamp]
-
 
   ###
   # @search [optional]

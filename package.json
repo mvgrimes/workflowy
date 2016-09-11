@@ -4,7 +4,7 @@
   "description": "Workflowy.com JSON API wrapper for node",
   "main": "index.coffee",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules/.bin/mocha"
   },
   "repository": {
     "type": "git",
@@ -26,5 +26,10 @@
     "q": "^1.1.2",
     "request": "^2.48.0",
     "tough-cookie": "^0.12.1"
+  },
+  "devDependencies": {
+    "mocha": "^3.0.2",
+    "throttled-request": "^0.1.1",
+    "tough-cookie-filestore": "mikerobe/tough-cookie-filestore#546a9de6b682654eb"
   }
 }
