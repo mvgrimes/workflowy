@@ -22,9 +22,11 @@
   },
   "homepage": "https://github.com/mikerobe/workflowy",
   "dependencies": {
+    "debug": "^2.2.0",
     "lodash": "^2.4.1",
     "q": "^1.1.2",
     "request": "^2.48.0",
+    "request-debug": "^0.2.0",
     "tough-cookie": "^0.12.1"
   },
   "devDependencies": {

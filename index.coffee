@@ -1,6 +1,8 @@
 _ = require 'lodash'
 Q = require 'q'
 request = require('request')
+debug = require('debug')
+require('request-debug')(request)
 
 utils =
   getTimestamp: (meta) ->
