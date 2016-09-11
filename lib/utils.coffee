@@ -23,3 +23,14 @@ module.exports =
       _.sampleSize(hex, 4).join('')
       _.sampleSize(hex, 12).join('')
     ].join('-')
+
+  treeToOutline: (roots, tab="  ") ->
+    lines = []
+    addLines = (nodes, depth) ->
+      for node in nodes
+        lines.push _.repeat(tab, depth) + "- " + (if node.cp then "[COMPLETE] " else "") + node.nm
+        addLines node.ch, depth+1 if node.ch
+      return
+    addLines roots, 0
+    lines.join '\n'
+

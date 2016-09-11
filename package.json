@@ -31,8 +31,6 @@
   },
   "devDependencies": {
     "mocha": "^3.0.2",
-    "sinon": "^1.17.5",
-    "throttled-request": "^0.1.1",
     "tough-cookie-filestore": "mikerobe/tough-cookie-filestore#546a9de6b682654eb"
   }
 }
