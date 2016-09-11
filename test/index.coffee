@@ -9,7 +9,7 @@ username = 'mikerobe@me.com'
 password = 'test'
 cookiesPath = path.join(__filename, '../cookies.json')
 
-describe 'Workflowy', -> 
+describe 'Workflowy', ->
   fc = null
   workflowy = null
 
@@ -38,15 +38,3 @@ describe 'Workflowy', ->
               assert.equal(nodes.length, 0)
               assert(workflowy._requests, 6)
 
-    # TODO no way to create records
-    ###
-    it.only 'should add a new child node', ->
-      workflowy = new Workflowy username, password, fc
-      workflowy.nodes.then ->
-        workflowy.find().then (nodes) ->
-          workflowy.delete(nodes).then ->
-            workflowy.nodes.then (nodes) ->
-              assert.equal(nodes.length, 0)
-              workflowy.
-              assert(workflowy._requests, 6)
-    ###

@@ -1,8 +1,16 @@
 _ = require 'lodash'
 Q = require 'q'
-request = require('request')
 debug = require('debug')
-require('request-debug')(request)
+request = require('request')
+
+# decorate request module
+request.use = (modules) ->
+  module(this) for module in modules
+  this
+request.use [
+  # require('request-debug')
+  require('./lib/request-throttle')(1000)
+]
 
 utils =
   getTimestamp: (meta) ->
