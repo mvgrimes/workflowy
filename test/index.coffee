@@ -125,6 +125,21 @@ describe 'Workflowy with proxy', ->
               - not complete
             """
 
+  describe.only '#bold', ->
+    it 'should make nodes not previously bold, bold', ->
+      workflowy.find('top').then (nodes) ->
+        workflowy.bold(nodes).then -> workflowyMatchesOutline """
+          - foo
+            - <b>bold</b> #today
+              - and another
+              - or another
+              - a final entry
+          - bar
+            - [COMPLETE] baz
+            - [COMPLETE] boo
+          - [COMPLETE] <b>top complete</b>
+            - not complete
+          """
 
   describe '#delete', ->
     it 'should only delete the selected nodes, including children', ->

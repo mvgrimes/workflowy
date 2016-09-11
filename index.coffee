@@ -142,10 +142,39 @@ module.exports = class Workflowy
       @refresh()
       return
 
+  ###
+  # makes the given nodes bold or not bold
+  ###
+  bold: (nodes, tf=true) ->
+    @meta || @refresh()
+    nodes = [nodes] unless _.isArray nodes
+    nodes = nodes.filter (node) -> /^<b>/.test(node.nm||'') isnt tf
+
+    if tf
+      modify = (name) -> name = "<b>#{name}</b>"
+    else
+      modfiy = (name) -> (name||'').replace(/^<b>(.*?)<\/b>/,'$1')
+
+    operations = for node in nodes
+      type: 'edit'
+      data: 
+        name: modify(node.nm)
+        projectid: node.id
+      undo_data:
+        previous_last_modified: node.lm
+        previous_completed: if tf then false else node.cp
+
+    @_update operations
+    .then ([resp,body,timestamp]) =>
+      # now update the nodes
+      for node, i in nodes
+        node.nm = operations[i].data.name
+        node.lm = timestamp
+
   complete: (nodes, tf=true) ->
     @meta || @refresh()
-
     nodes = [nodes] unless _.isArray nodes
+    nodes = nodes.filter (node) -> node.cp? isnt tf
 
     operations = for node in nodes
       type: if tf then 'complete' else 'uncomplete'
@@ -162,6 +191,7 @@ module.exports = class Workflowy
           node.cp = timestamp
         else
           delete node.cp
+        node.lm = timestamp
 
       return
 
