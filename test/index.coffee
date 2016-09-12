@@ -62,7 +62,7 @@ describe.skip 'Workflowy over the wire', ->
 
 describe 'Workflowy with proxy', ->
   beforeEach ->
-    workflowy = proxy new Workflowy username, password, fc
+    workflowy = proxy new Workflowy username, password
     workflowy.request.populate initialList
 
   describe '#find', ->

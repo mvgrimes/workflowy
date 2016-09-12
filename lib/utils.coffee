@@ -1,6 +1,6 @@
 _ = require 'lodash'
 
-module.exports =
+module.exports = utils =
   getTimestamp: (meta) ->
     Math.floor (Date.now() - meta.projectTreeData.mainProjectTreeInfo.dateJoinedTimestampInSeconds) / 60
 
@@ -45,9 +45,19 @@ module.exports =
     addChildren roots, 'None'
     result
 
+  applyToTree: (roots, method) ->
+    for root in roots
+      method.call(null,root)
+      if root.ch
+        utils.applyToTree root.ch, method
+    return
+
   makeBold: (name='', tf=true) ->
     if tf
-      "<b>#{name}</b>"
+      if /^<b>/.test(name)
+        name
+      else
+        "<b>#{name}</b>"
     else
       name.replace(/^<b>(.*?)<\/b>/,'$1')
 
