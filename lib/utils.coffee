@@ -47,7 +47,7 @@ module.exports = utils =
 
   applyToTree: (roots, method) ->
     for root in roots
-      method.call(null,root)
+      continue if method.call(null,root) is false
       if root.ch
         utils.applyToTree root.ch, method
     return
