@@ -67,7 +67,7 @@ module.exports = class Workflowy
       timestamp = utils.getTimestamp meta
       {clientId} = meta.projectTreeData
 
-      operation.client_timestamp = timestamp for operation in operations
+      operation.client_timestamp ?= timestamp for operation in operations
 
       Q.ninvoke @request,
         'post'
@@ -113,9 +113,42 @@ module.exports = class Workflowy
       nodes = _.filter nodes, condition if condition
       nodes
 
+  ###
+  # nodes is an array with {name, description}
+  # startIndex is the insertion position
+  ###
+  addChildren: (nodes, parentNode={id: 'None'}, startIndex=0) ->
+    @meta || @refresh()
+    nodes = [nodes] unless _.isArray nodes
+    parentId = parentNode.id
+
+    operations = []
+    for node, i in nodes
+      node.id = utils.makeNodeId()
+      operations.push
+        type: 'create'
+        undo_data: {}
+        data:
+          parentid: parentId
+          projectid: node.id
+          priority: startIndex + i
+      operations.push
+        type: 'edit'
+        data:
+          projectid: node.id
+          name: node.name || ''
+          description: node.description || ''
+        undo_data:
+          previous_last_modified: 0
+          previous_name: ''
+
+    @_update operations
+    .then =>
+      @refresh()
+      return
+
   delete: (nodes) ->
     @meta || @refresh()
-
     nodes = [nodes] unless _.isArray nodes
 
     operations = for node in nodes

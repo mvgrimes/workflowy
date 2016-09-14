@@ -33,7 +33,7 @@ workflowyMatchesOutline = (outline) ->
     nodes = nodes.filter (node) -> node.parentId is 'None'
     assert.equal(utils.treeToOutline(nodes),outline)
 
-describe.skip 'Workflowy over the wire', ->
+describe 'Workflowy over the wire', ->
 
   beforeEach ->
     Q.ninvoke fs, 'unlink', cookiesPath
@@ -59,6 +59,47 @@ describe.skip 'Workflowy over the wire', ->
             workflowy.nodes.then (nodes) ->
               assert.equal(nodes.length, 0)
               assert(workflowy._requests, 7)
+
+  describe.only '#addChildren', ->
+    it 'should add child nodes where expected in the tree', ->
+      workflowy = new Workflowy username, password, fc
+
+      workflowy.addChildren [{name: 'first'}, {name: 'second'}]
+      .then ->
+        workflowy.find().then (nodes) ->
+          assert.equal(nodes[0].nm, 'first')
+          assert.equal(nodes[1].nm, 'second')
+
+          workflowy.addChildren [{name: 'underFirst1'}, {name: 'underFirst2'}], nodes[0]
+          .then ->
+            workflowy.find().then (nodes) ->
+              assert.equal(nodes[0].nm, 'first')
+              assert.equal(nodes[1].nm, 'underFirst1')
+              assert.equal(nodes[2].nm, 'underFirst2')
+              assert.equal(nodes[3].nm, 'second')
+
+              assert.equal(nodes[1].parentId, nodes[0].id)
+              assert.equal(nodes[2].parentId, nodes[0].id)
+
+              workflowy.addChildren [{name: 'between underFirst1 and underFirst2 a'}, {name: 'between underFirst1 and underFirst2 b'}], nodes[0], 1
+              .then ->
+                workflowy.find().then (nodes) ->
+                  assert.equal(nodes[0].nm, 'first')
+                  assert.equal(nodes[1].nm, 'underFirst1')
+                  assert.equal(nodes[2].nm, 'between underFirst1 and underFirst2 a')
+                  assert.equal(nodes[3].nm, 'between underFirst1 and underFirst2 b')
+                  assert.equal(nodes[4].nm, 'underFirst2')
+                  assert.equal(nodes[5].nm, 'second')
+
+                  assert.equal(nodes[0].parentId, 'None')
+                  assert.equal(nodes[1].parentId, nodes[0].id)
+                  assert.equal(nodes[2].parentId, nodes[0].id)
+                  assert.equal(nodes[3].parentId, nodes[0].id)
+                  assert.equal(nodes[4].parentId, nodes[0].id)
+                  assert.equal(nodes[5].parentId, 'None')
+
+
+
 
 describe 'Workflowy with proxy', ->
   beforeEach ->
