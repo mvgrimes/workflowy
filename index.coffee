@@ -5,13 +5,9 @@ request = require('request')
 utils = require './lib/utils'
 
 # decorate request module
-request.use = (modules) ->
-  module(this) for module in modules
-  this
-request.use [
-  # require('request-debug')
-  require('./lib/request-throttle')(1000)
-]
+request.use = (module,options) -> module this,options; this
+# request.use require('request-debug')
+request.use require('./lib/request-throttle'), millis: 1000
 
 module.exports = class Workflowy
   @clientVersion: 18
@@ -25,6 +21,9 @@ module.exports = class Workflowy
     @jar = if jar then request.jar(jar) else request.jar()
     @request = request.defaults {@jar, json: true}
     @_lastTransactionId = null
+
+  use: (module, options) -> module this, options; this
+  plugins: {}
 
   login: ->
     Q.ninvoke @request,
