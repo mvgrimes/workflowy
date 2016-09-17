@@ -9,21 +9,36 @@ request.use = (module,options) -> module this,options; this
 # request.use require('request-debug')
 request.use require('./lib/request-throttle'), millis: 1000
 
+makeUrls = (workflowy) ->
+  {
+    login: 'https://workflowy.com/accounts/login/'
+    meta: "https://workflowy.com/get_initialization_data?client_version=#{Workflowy.clientVersion}#{if workflowy.shareId then "&share_id=#{workflowy.shareId}" else ""}"
+    update: 'https://workflowy.com/push_and_poll'
+  }
+
 module.exports = class Workflowy
   @clientVersion: 18
 
-  @urls:
-    login: 'https://workflowy.com/accounts/login/'
-    meta: "https://workflowy.com/get_initialization_data?client_version=#{Workflowy.clientVersion}"
-    update: 'https://workflowy.com/push_and_poll'
-
-  constructor: (@username, @password, jar) ->
+  constructor: (@username, @password, {jar, shareId}) ->
     @jar = if jar then request.jar(jar) else request.jar()
-    @request = request.defaults {@jar, json: true}
+    @request = request.defaults {json: true}
     @_lastTransactionId = null
+    @shareId = utils.parseShareId(shareId)
+    @urls = makeUrls(this)
 
   use: (module, options={}) -> module this, options; this
   plugins: {}
+
+  ###
+  # takes a shareId or a share URL, such as <https://workflowy.com/s/BtARFRlTVt>
+  ###
+  quarantine: ({shareId, jar}) ->
+    newInstance = Object.create this
+    newInstance.shareId = utils.parseShareId(shareId)
+    newInstance.urls = makeUrls(newInstance)
+    newInstance.jar = if jar then request.jar(jar) else request.jar()
+    delete newInstance.meta
+    newInstance
 
   asText: (roots) ->
     @meta || @refresh()
@@ -32,23 +47,28 @@ module.exports = class Workflowy
       utils.treeToOutline(roots)
 
   login: ->
-    Q.ninvoke @request,
-      'post'
-      url: Workflowy.urls.login
-      form: {@username, @password}
-    .then ([resp, body]) ->
-      unless (resp.statusCode is 302) and (resp.headers.location is "https://workflowy.com/")
-        utils.checkForErrors arguments...
-      return
-    .fail (err) ->
-      console.error "Error logging in: ", err
-      throw err
+    if @shareId
+      Q.when()
+    else
+      Q.ninvoke @request,
+        'post'
+        jar: @jar
+        url: @urls.login
+        form: {@username, @password}
+      .then ([resp, body]) ->
+        unless (resp.statusCode is 302) and (resp.headers.location is "https://workflowy.com/")
+          utils.checkForErrors arguments...
+        return
+      .fail (err) ->
+        console.error "Error logging in: ", err
+        throw err
 
   refresh: ->
     meta = =>
       Q.ninvoke @request,
         'get'
-        url: Workflowy.urls.meta
+        jar: @jar
+        url: @urls.meta
       .then ([resp,body]) ->
         utils.checkForErrors arguments...
         body
@@ -76,12 +96,15 @@ module.exports = class Workflowy
 
       Q.ninvoke @request,
         'post'
-        url: Workflowy.urls.update
+        url: @urls.update
+        jar: @jar
         form:
           client_id: clientId
+          share_id: @shareId
           client_version: Workflowy.clientVersion
           push_poll_id: utils.makePollId()
           push_poll_data: JSON.stringify [
+            share_id: @shareId
             most_recent_operation_transaction_id: @_lastTransactionId
             operations: operations
           ]
@@ -89,6 +112,7 @@ module.exports = class Workflowy
         utils.checkForErrors arguments...
         @_lastTransactionId = body.results[0].new_most_recent_operation_transaction_id
         [resp, body, timestamp]
+
 
   ###
   # @search [optional]

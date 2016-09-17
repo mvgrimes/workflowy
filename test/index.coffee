@@ -13,10 +13,10 @@ cookiesPath = path.join(__filename, '../cookies.json')
 
 initialList = """
   - foo
+  con
     - <b>bold</b> #today
       - and another
       - or another
-      - a final entry
   - bar
     - [COMPLETE] baz
     - [COMPLETE] boo
@@ -27,8 +27,10 @@ initialList = """
 fc = null
 workflowy = null
 
-workflowyMatchesOutline = (outline) ->
-  workflowy.find().then (nodes) ->
+workflowyMatchesOutline = (inst, outline) ->
+  [outline, inst] = [inst, workflowy] if arguments.length <2
+    
+  inst.find().then (nodes) ->
     # find the root nodes in the flat list
     nodes = nodes.filter (node) -> node.parentId is 'None'
     assert.equal(utils.treeToOutline(nodes),outline)
@@ -68,26 +70,76 @@ addChildrenTest = (workflowy) ->
               assert.equal(nodes[4].parentId, nodes[0].id)
               assert.equal(nodes[5].parentId, 'None')
 
-describe 'Workflowy over the wire', ->
+shareIdTests = (useQuarantine) ->
+  rootName = "Book list"
+  shareId = 'https://workflowy.com/s/XrZbUcWcLL'
+  fcSub = new FileCookieStore('cookies.json')
+  workflowySub = null
 
   beforeEach ->
+    # clean up all the nodes under the book list
+    workflowy = new Workflowy username, password, jar: fc
+    if useQuarantine
+      workflowySub = workflowy.quarantine jar: fcSub, shareId: shareId
+    workflowy.find(rootName)
+    .then (nodes) ->
+      assert.equal nodes.length, 1
+      if (children = nodes[0].ch)?.length
+        workflowy.delete(children)
+        .then ->
+          unless useQuarantine
+            workflowySub = new Workflowy username, password, jar: fcSub, shareId: shareId
+      else
+        unless useQuarantine
+          workflowySub = new Workflowy username, password, jar: fcSub, shareId: shareId
+
+  describe '#find', ->
+    it 'should return only nodes under the given Id', ->
+      workflowySub.refresh()
+      workflowyMatchesOutline workflowySub, ""
+
+  describe '#addChildren', ->
+    it 'should add children under the expected root node', ->
+      newRootNode = "top level child #{Date.now()}"
+      newShareNode = "share #{Date.now()}"
+
+      Q.all([
+        workflowy.addChildren name: newRootNode
+        workflowySub.addChildren name: newShareNode
+      ]).then ->
+        workflowyMatchesOutline workflowySub, "- #{newShareNode}"
+      .then ->
+        workflowy.find().then (nodes) ->
+          assert.equal nodes[0].nm, newRootNode
+
+
+
+describe.skip 'Workflowy over the wire', ->
+  username = process.env.WORKFLOWY_USERNAME
+  password = process.env.WORKFLOWY_PASSWORD
+
+  beforeEach ->
+    (console.error "Workflowy username and password must be provided through environmental variables."; process.exit 1) unless username and password
+
     Q.ninvoke fs, 'unlink', cookiesPath
     .then Q, Q
     .then ->
       fc = new FileCookieStore('cookies.json')
 
-  describe '#constructor', ->
+  describe.skip '#constructor', ->
     it 'with empty cookies, should make 3 initial requests (meta, login, meta) then 1 with cookies present', ->
-      workflowy = new Workflowy username, password, fc
+      workflowy = new Workflowy username, password, jar: fc
+      workflowy.refresh()
       workflowy.nodes.then ->
         assert.equal(workflowy._requests,3)
-        workflowy = new Workflowy username, password, fc
+        workflowy = new Workflowy username, password, jar: fc
         workflowy.nodes.then ->
           assert.equal(workflowy._requests, 1)
 
-  describe '#update', ->
+  describe.skip '#update', ->
     it 'should reflect an empty tree after deleting all top level nodes', ->
-      workflowy = new Workflowy username, password, fc
+      workflowy = new Workflowy username, password, jar: fc
+      workflowy.refresh()
       workflowy.nodes.then ->
         workflowy.find().then (nodes) ->
           workflowy.delete(nodes).then ->
@@ -97,8 +149,15 @@ describe 'Workflowy over the wire', ->
 
   describe '#addChildren', ->
     it 'should add child nodes where expected in the tree', ->
-      addChildrenTest workflowy = new Workflowy username, password, fc
+      workflowy = new Workflowy username, password, jar: fc
+      workflowy.refresh()
+      addChildrenTest workflowy
 
+  describe 'with a shareId in constructor', ->
+    shareIdTests false
+
+  describe '#quarantine', ->
+    shareIdTests true
 
 describe 'Workflowy with proxy', ->
   beforeEach ->
