@@ -57,7 +57,7 @@ module.exports = (workflowy) ->
     makeNode(line) for line in outline.split(/\r?\n/g)
     return
 
-  findNode = (id) ->
+  findNodePath = (id) ->
     parents = [{ch: tree}]
     i = 0
     while (parent = parents[i])
@@ -69,28 +69,37 @@ module.exports = (workflowy) ->
       ++i
     null
 
+  findNode = (id) ->
+    return null unless path = findNodePath(id)
+    path.parent.ch[path.index]
+
   update = (operations, cb) ->
-    for {type, data: {projectid, name}} in operations
+    for {type, data: {projectid, name, priority, parentid}} in operations
       mostRecentTransaction = utils.getTimestamp(meta)
 
       switch type
         when "delete"
-          if (path = findNode(projectid))
+          if (path = findNodePath(projectid))
             path.parent.ch.splice(path.index,1)
         when "edit"
-          if (path = findNode(projectid))
+          if (path = findNodePath(projectid))
             path.parent.ch[path.index].nm = name
             path.parent.ch[path.index].lm = mostRecentTransaction
         when "complete"
-          if (path = findNode(projectid))
+          if (path = findNodePath(projectid))
             path.parent.ch[path.index].cp = mostRecentTransaction
+        when "create"
+          if (parent = if (parentid is 'None' or !parentid) then {ch: tree} else findNode(parentid))
+            (parent.ch ||= []).splice priority, 0,
+              id: projectid
+              lm: 67919370
     {
       new_most_recent_operation_transaction_id: mostRecentTransaction
     }
 
   request.get = ({url}, cb) ->
     cb new Error "Unhandled get url: #{url}" unless url is Workflowy.urls.meta
-    cb null, response(), meta = 
+    cb null, response(), meta =
       projectTreeData: {
         clientId
         mainProjectTreeInfo: {
