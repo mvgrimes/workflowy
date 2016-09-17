@@ -22,8 +22,14 @@ module.exports = class Workflowy
     @request = request.defaults {@jar, json: true}
     @_lastTransactionId = null
 
-  use: (module, options) -> module this, options; this
+  use: (module, options={}) -> module this, options; this
   plugins: {}
+
+  asText: (roots) ->
+    @meta || @refresh()
+    @nodes.then (allNodes) ->
+      roots ?= allNodes.filter (node) -> node.parentId is 'None'
+      utils.treeToOutline(roots)
 
   login: ->
     Q.ninvoke @request,

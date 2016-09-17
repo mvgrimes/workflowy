@@ -33,7 +33,7 @@ workflowyMatchesOutline = (outline) ->
     nodes = nodes.filter (node) -> node.parentId is 'None'
     assert.equal(utils.treeToOutline(nodes),outline)
 
-describe 'Workflowy over the wire', ->
+describe.skip 'Workflowy over the wire', ->
 
   beforeEach ->
     Q.ninvoke fs, 'unlink', cookiesPath
@@ -60,7 +60,7 @@ describe 'Workflowy over the wire', ->
               assert.equal(nodes.length, 0)
               assert(workflowy._requests, 7)
 
-  describe.only '#addChildren', ->
+  describe '#addChildren', ->
     it 'should add child nodes where expected in the tree', ->
       workflowy = new Workflowy username, password, fc
 
@@ -185,13 +185,30 @@ describe 'Workflowy with proxy', ->
   describe '#delete', ->
     it 'should only delete the selected nodes, including children', ->
       workflowy.find('#today').then (nodes) ->
-        workflowy.delete(nodes).then -> workflowyMatchesOutline """
-          - foo
-          - bar
-            - [COMPLETE] baz
-            - [COMPLETE] boo
-          - [COMPLETE] top complete
-            - not complete
-          """
+        workflowy.delete(nodes)
+      .then -> workflowyMatchesOutline """
+        - foo
+        - bar
+          - [COMPLETE] baz
+          - [COMPLETE] boo
+        - [COMPLETE] top complete
+          - not complete
+        """
 
+  describe '#asText', ->
+    it 'should return the same outline given', ->
+      workflowy.asText().then (text) ->
+        assert.equal text, initialList
+    it 'should make expected modifications', ->
+      workflowy.find('',true)
+      .then (nodes) -> workflowy.delete(nodes)
+      .then -> workflowy.asText()
+      .then (text) -> assert.equal text, """
+        - foo
+          - <b>bold</b> #today
+            - and another
+            - or another
+            - a final entry
+        - bar
+        """
 
