@@ -161,7 +161,7 @@ module.exports = class Workflowy
     i = nodes.length
     while --i >= 0
       node = nodes[i]
-      node.id = utils.makeNodeId()
+      node.id ||= utils.makeNodeId()
       operations.push
         type: 'create'
         undo_data: {}
