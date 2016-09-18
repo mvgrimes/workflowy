@@ -74,7 +74,7 @@ module.exports = (workflowy) ->
     path.parent.ch[path.index]
 
   update = (operations, cb) ->
-    for {type, data: {projectid, name, priority, parentid}} in operations
+    for {type, data: {projectid, name, priority, parentid, description}} in operations
       mostRecentTransaction = utils.getTimestamp(meta)
 
       switch type
@@ -84,6 +84,7 @@ module.exports = (workflowy) ->
         when "edit"
           if (path = findNodePath(projectid))
             path.parent.ch[path.index].nm = name
+            path.parent.ch[path.index].no = description if description
             path.parent.ch[path.index].lm = mostRecentTransaction
         when "complete"
           if (path = findNodePath(projectid))
