@@ -156,6 +156,7 @@ module.exports = class Workflowy
   addChildren: (nodes, parentNode={id: 'None'}, startIndex=0) ->
     @meta || @refresh()
     nodes = [nodes] unless _.isArray nodes
+    return Q() unless nodes.length > 0
     parentId = parentNode.id
 
     operations = []
@@ -190,6 +191,7 @@ module.exports = class Workflowy
 
     @meta || @refresh()
     nodes = [nodes] unless _.isArray nodes
+    return Q() unless nodes.length > 0
 
     operations = for node in nodes
       type: 'delete'
@@ -212,6 +214,7 @@ module.exports = class Workflowy
     @meta || @refresh()
     nodes = [nodes] unless _.isArray nodes
     nodes = nodes.filter (node) -> /^<b>/.test(node.nm||'') isnt tf
+    return Q() unless nodes.length > 0
 
     operations = for node in nodes
       type: 'edit'
@@ -233,6 +236,7 @@ module.exports = class Workflowy
     @meta || @refresh()
     nodes = [nodes] unless _.isArray nodes
     nodes = nodes.filter (node) -> node.cp? isnt tf
+    return Q() unless nodes.length > 0
 
     operations = for node in nodes
       type: if tf then 'complete' else 'uncomplete'
@@ -259,6 +263,8 @@ module.exports = class Workflowy
     unless _.isArray nodes
       nodes = [nodes]
       newNames = [newNames]
+
+    return Q() unless nodes.length > 0
 
     operations = for node, i in nodes
       type: 'edit',
