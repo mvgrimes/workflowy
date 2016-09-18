@@ -1,8 +1,9 @@
 _ = require 'lodash'
 Q = require 'q'
-debug = require('debug')
+debug = require('debug')('workflowy')
 request = require('request')
 utils = require './lib/utils'
+util = require 'util'
 
 # decorate request module
 request.use = (module,options) -> module this,options; this
@@ -185,6 +186,8 @@ module.exports = class Workflowy
       return
 
   delete: (nodes) ->
+    debug "deleting nodes #{util.inspect nodes}"
+
     @meta || @refresh()
     nodes = [nodes] unless _.isArray nodes
 
