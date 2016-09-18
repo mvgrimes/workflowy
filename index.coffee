@@ -156,7 +156,7 @@ module.exports = class Workflowy
         data:
           parentid: parentId
           projectid: node.id
-          priority: startIndex + i
+          priority: startIndex[i] ? startIndex + i
       operations.push
         type: 'edit'
         data:
