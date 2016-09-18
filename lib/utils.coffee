@@ -108,5 +108,23 @@ module.exports = utils =
     context = context.substr(1) if context.charAt(0) is '@'
     name.replace(///(?:\s+@#{context}\b|@#{context}\s+|@#{context}\b)///i,'')
 
+  getContexts: (name) ->
+    for str in (name||'').match(///@(\w+)\b///g) || []
+      str.substr(1)
+
+  inheritedContexts: (node) ->
+    contexts = Object.create null
+    parent = node
+    while parent = parent.parent
+      for ctx in utils.getContexts parent.nm
+        contexts[ctx] = 1
+    Object.keys contexts
+
+  inheritContexts: (name, node) ->
+    for context in utils.inheritedContexts node
+      name = utils.addContext name, context
+    name
+
+
 
 

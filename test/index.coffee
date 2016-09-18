@@ -376,4 +376,23 @@ describe 'Workflowy utils', ->
       name = '@home #week this was for this week'
       assert.equal(utils.removeContext(name, 'home'), '#week this was for this week')
 
+  describe '#getContexts', ->
+    it 'should return an array of all the contexts', ->
+      arr = utils.getContexts "foo @bar @baz hello @world: yay @mundo"
+      assert.equal(arr.length, 4)
+      assert('bar' in arr)
+      assert('baz' in arr)
+      assert('world' in arr)
+      assert('mundo' in arr)
 
+  describe '#inheritContexts', ->
+    it 'should return an array of all the contexts', ->
+
+      workflowy = proxy new Workflowy username, password
+      workflowy.request.populate """
+        - hello @bar
+          - another @baz:
+            - and a final hello
+        """
+      workflowy.find().then (nodes) ->
+        assert.equal "and a final hello @baz @bar", utils.inheritContexts(nodes[2].nm, nodes[2])
