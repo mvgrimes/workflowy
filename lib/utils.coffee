@@ -44,11 +44,12 @@ module.exports = utils =
 
   flattenTree: (roots) ->
     result = []
-    addChildren = (arr, parentId) ->
+    addChildren = (arr, parentId, parent) ->
       for child in arr
         child.parentId = parentId
+        child.parent = parent if parent
         result.push child
-        addChildren children, child.id if children = child.ch
+        addChildren children, child.id, child if children = child.ch
       return
     addChildren roots, 'None'
     result
