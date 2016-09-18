@@ -19,9 +19,9 @@ makeUrls = (workflowy) ->
 module.exports = class Workflowy
   @clientVersion: 18
 
-  constructor: (@username, @password, {jar, shareId}) ->
+  constructor: (@username, @password, {jar, shareId} = {}) ->
     @jar = if jar then request.jar(jar) else request.jar()
-    @request = request.defaults {json: true}
+    @request = request.defaults {@jar, json: true}
     @_lastTransactionId = null
     @shareId = utils.parseShareId(shareId)
     @urls = makeUrls(this)
@@ -32,11 +32,10 @@ module.exports = class Workflowy
   ###
   # takes a shareId or a share URL, such as <https://workflowy.com/s/BtARFRlTVt>
   ###
-  quarantine: ({shareId, jar}) ->
+  quarantine: (shareId) ->
     newInstance = Object.create this
     newInstance.shareId = utils.parseShareId(shareId)
     newInstance.urls = makeUrls(newInstance)
-    newInstance.jar = if jar then request.jar(jar) else request.jar()
     delete newInstance.meta
     newInstance
 
@@ -52,7 +51,6 @@ module.exports = class Workflowy
     else
       Q.ninvoke @request,
         'post'
-        jar: @jar
         url: @urls.login
         form: {@username, @password}
       .then ([resp, body]) ->
@@ -67,7 +65,6 @@ module.exports = class Workflowy
     meta = =>
       Q.ninvoke @request,
         'get'
-        jar: @jar
         url: @urls.meta
       .then ([resp,body]) ->
         utils.checkForErrors arguments...
@@ -97,7 +94,6 @@ module.exports = class Workflowy
       Q.ninvoke @request,
         'post'
         url: @urls.update
-        jar: @jar
         form:
           client_id: clientId
           share_id: @shareId

@@ -80,7 +80,7 @@ shareIdTests = (useQuarantine) ->
     # clean up all the nodes under the book list
     workflowy = new Workflowy username, password, jar: fc
     if useQuarantine
-      workflowySub = workflowy.quarantine jar: fcSub, shareId: shareId
+      workflowySub = workflowy.quarantine shareId
     workflowy.find(rootName)
     .then (nodes) ->
       assert.equal nodes.length, 1
