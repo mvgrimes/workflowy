@@ -1,5 +1,7 @@
 _ = require 'lodash'
 
+endBold = '</b>'
+
 module.exports = utils =
   parseShareId: (shareId) ->
     return unless shareId
@@ -66,4 +68,26 @@ module.exports = utils =
         "<b>#{name}</b>"
     else
       name.replace(/^<b>(.*?)<\/b>/,'$1')
+
+  hasTag: (name, tag) ->
+    tag = '#' + tag unless tag.charAt(0) is '#'
+    ///#{tag}\b///i.test name
+
+  addTag: (name, tag) ->
+    return name if utils.hasTag name, tag
+    tag = '#' + tag unless tag.charAt(0) is '#'
+
+    addBold = false
+    if ///#{endBold}$///i.test(name)
+      name = name.substr(0,name.length-endBold.length)
+      addBold = true
+
+    name + (if /\s$/.test(name) then '' else ' ') + tag + (if addBold then endBold else '')
+
+  removeTag: (name, tag) ->
+    tag = tag.substr(1) if tag.charAt(0) is '#'
+    name.replace(///(?:\s+\##{tag}\b|\##{tag}\s+|\##{tag}\b)///i,'')
+
+
+
 

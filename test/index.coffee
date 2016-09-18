@@ -13,10 +13,10 @@ cookiesPath = path.join(__filename, '../cookies.json')
 
 initialList = """
   - foo
-  con
     - <b>bold</b> #today
       - and another
       - or another
+      - a final entry
   - bar
     - [COMPLETE] baz
     - [COMPLETE] boo
@@ -272,4 +272,41 @@ describe 'Workflowy with proxy', ->
   describe '#addChildren', ->
     it 'should add child nodes where expected in the tree', ->
       addChildrenTest workflowy
+
+describe 'Workflowy utils', ->
+  describe '#addTag', ->
+    it 'should add a tag if it does not exist', ->
+      name = 'foo bar'
+      assert.equal(utils.addTag(name, 'today'), name + ' #today')
+      name = 'foo bar #todays'
+      assert.equal(utils.addTag(name, 'today'), name + ' #today')
+
+    it 'should not add a tag if it does exist', ->
+      name = '#today foo bar'
+      assert.equal(utils.addTag(name, 'today'), name)
+      name = 'foo bar #today'
+      assert.equal(utils.addTag(name, 'today'), name)
+
+    it 'should insert the tag within bold', ->
+      name = '<b>foo bar</b>'
+      assert.equal(utils.addTag(name, 'today'), '<b>foo bar #today</b>')
+
+  describe '#removeTag', ->
+    it 'should remove a tag if it exists', ->
+      name = 'foo #today bar'
+      assert.equal(utils.removeTag(name, 'today'), 'foo bar')
+    it 'should do nothing if the tag does not exist', ->
+      name = 'foo #todays bar'
+      assert.equal(utils.removeTag(name, 'today'), name)
+    it 'should remove spacing before and after as appropriate', ->
+      name = 'foo #today bar'
+      assert.equal(utils.removeTag(name, 'today'), 'foo bar')
+      name = '#today bar'
+      assert.equal(utils.removeTag(name, 'today'), 'bar')
+      name = 'bar #today'
+      assert.equal(utils.removeTag(name, 'today'), 'bar')
+      name = '#today #week this was for this week'
+      assert.equal(utils.removeTag(name, 'today'), '#week this was for this week')
+
+
 
