@@ -98,7 +98,7 @@ module.exports = (workflowy) ->
     }
 
   request.get = ({url}, cb) ->
-    cb new Error "Unhandled get url: #{url}" unless url is Workflowy.urls.meta
+    cb new Error "Unhandled get url: #{url}" unless url is workflowy.urls.meta
     cb null, response(), meta =
       projectTreeData: {
         clientId
@@ -114,12 +114,12 @@ module.exports = (workflowy) ->
 
   request.post = ({url, form}, cb) ->
     switch url
-      when Workflowy.urls.login
+      when workflowy.urls.login
         if (form.username is process.env.WORKFLOWY_USERNAME) and (form.password is process.env.WORKFLOWY_PASSWORD)
           cb null, response(), ""
         else
           cb null, response(500, "bad user/pass")
-      when Workflowy.urls.update
+      when workflowy.urls.update
         results = (update data.operations for data in JSON.parse(form.push_poll_data))
         cb null, response(), { results }
       else return cb new Error "Unhandled post url: #{url}"
