@@ -34,6 +34,7 @@ module.exports = class Workflowy
     return
 
   stop: ->
+    @jar?.close?()
     plugin?.stop?() for name, plugin of @plugins
     return
 
