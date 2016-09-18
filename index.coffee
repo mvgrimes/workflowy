@@ -43,6 +43,7 @@ module.exports = class Workflowy
     @meta || @refresh()
     @nodes.then (allNodes) ->
       roots ?= allNodes.filter (node) -> node.parentId is 'None'
+      roots = [roots] unless _.isArray roots
       utils.treeToOutline(roots)
 
   login: ->
@@ -148,7 +149,9 @@ module.exports = class Workflowy
     parentId = parentNode.id
 
     operations = []
-    for node, i in nodes
+    i = nodes.length
+    while --i >= 0
+      node = nodes[i]
       node.id = utils.makeNodeId()
       operations.push
         type: 'create'
@@ -156,7 +159,7 @@ module.exports = class Workflowy
         data:
           parentid: parentId
           projectid: node.id
-          priority: startIndex[i] ? startIndex + i
+          priority: startIndex[i] ? startIndex
       operations.push
         type: 'edit'
         data:

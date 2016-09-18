@@ -70,6 +70,40 @@ addChildrenTest = (workflowy) ->
               assert.equal(nodes[4].parentId, nodes[0].id)
               assert.equal(nodes[5].parentId, 'None')
 
+  .then ->
+    root = "foo #{Date.now()}"
+    rootNode = null
+    workflowy.addChildren name: root
+    .then -> workflowy.find()
+    .then (nodes) ->
+      rootNode = nodes[0]
+      assert.equal(nodes[0].nm,root)
+      workflowy.addChildren [{name: '1'},{name: '3'},{name:'5'}], nodes[0]
+    .then -> workflowy.find( (node) -> node.id is rootNode.id )
+    .then (nodes) -> rootNode = nodes[0]
+    .then -> workflowy.asText(rootNode)
+    .then (text) ->
+      assert.equal text, """
+      - #{root}
+        - 1
+        - 3
+        - 5
+      """
+      workflowy.addChildren [{name: '2'},{name: '4'}], rootNode, [1,2]
+    .then -> workflowy.find( (node) -> node.id is rootNode.id )
+    .then (nodes) -> rootNode = nodes[0]
+    .then -> workflowy.asText(rootNode)
+    .then (text) ->
+      assert.equal text, """
+      - #{root}
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+      """
+
+
 shareIdTests = (useQuarantine) ->
   rootName = "Book list"
   shareId = 'https://workflowy.com/s/XrZbUcWcLL'
@@ -98,7 +132,7 @@ shareIdTests = (useQuarantine) ->
       workflowySub.refresh()
       workflowyMatchesOutline workflowySub, ""
 
-  describe '#addChildren', ->
+  describe '#addChildren shareId', ->
     it 'should add children under the expected root node', ->
       newRootNode = "top level child #{Date.now()}"
       newShareNode = "share #{Date.now()}"
@@ -153,10 +187,10 @@ describe.skip 'Workflowy over the wire', ->
       workflowy.refresh()
       addChildrenTest workflowy
 
-  describe 'with a shareId in constructor', ->
+  describe.skip 'with a shareId in constructor', ->
     shareIdTests false
 
-  describe '#quarantine', ->
+  describe.skip '#quarantine', ->
     shareIdTests true
 
 describe 'Workflowy with proxy', ->
