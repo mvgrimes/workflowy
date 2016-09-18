@@ -29,6 +29,14 @@ module.exports = class Workflowy
   use: (module, options={}) -> module this, options; this
   plugins: {}
 
+  start: ->
+    plugin?.start?() for name, plugin of @plugins
+    return
+
+  stop: ->
+    plugin?.stop?() for name, plugin of @plugins
+    return
+
   ###
   # takes a shareId or a share URL, such as <https://workflowy.com/s/BtARFRlTVt>
   ###
