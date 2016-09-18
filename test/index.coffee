@@ -106,7 +106,7 @@ addChildrenTest = (workflowy) ->
 
 shareIdTests = (useQuarantine) ->
   rootName = "Book list"
-  shareId = 'https://workflowy.com/s/XrZbUcWcLL'
+  throw new Error "env var WORKFLOWY_SHAREID is required to test quarantine and share id" unless shareId = process.env.WORKFLOWY_SHAREID
   fcSub = new FileCookieStore('cookies.json')
   workflowySub = null
 
