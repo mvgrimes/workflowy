@@ -88,6 +88,24 @@ module.exports = utils =
     tag = tag.substr(1) if tag.charAt(0) is '#'
     name.replace(///(?:\s+\##{tag}\b|\##{tag}\s+|\##{tag}\b)///i,'')
 
+  hasContext: (name, context) ->
+    context = '@' + context unless context.charAt(0) is '@'
+    ///#{context}\b///i.test name
+
+  addContext: (name, context) ->
+    return name if utils.hasContext name, context
+    context = '@' + context unless context.charAt(0) is '@'
+
+    addBold = false
+    if ///#{endBold}$///i.test(name)
+      name = name.substr(0,name.length-endBold.length)
+      addBold = true
+
+    name + (if /\s$/.test(name) then '' else ' ') + context + (if addBold then endBold else '')
+
+  removeContext: (name, context) ->
+    context = context.substr(1) if context.charAt(0) is '@'
+    name.replace(///(?:\s+@#{context}\b|@#{context}\s+|@#{context}\b)///i,'')
 
 
 

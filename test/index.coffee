@@ -308,5 +308,38 @@ describe 'Workflowy utils', ->
       name = '#today #week this was for this week'
       assert.equal(utils.removeTag(name, 'today'), '#week this was for this week')
 
+  describe '#addContext', ->
+    it 'should add a context if it does not exist', ->
+      name = 'foo bar'
+      assert.equal(utils.addContext(name, 'today'), name + ' @today')
+      name = 'foo bar @todays'
+      assert.equal(utils.addContext(name, 'today'), name + ' @today')
+
+    it 'should not add a context if it does exist', ->
+      name = '@today foo bar'
+      assert.equal(utils.addContext(name, 'today'), name)
+      name = 'foo bar @today'
+      assert.equal(utils.addContext(name, 'today'), name)
+
+    it 'should insert the context within bold', ->
+      name = '<b>foo bar</b>'
+      assert.equal(utils.addContext(name, 'today'), '<b>foo bar @today</b>')
+
+  describe '#removeContext', ->
+    it 'should remove a context if it exists', ->
+      name = 'foo @today bar'
+      assert.equal(utils.removeContext(name, 'today'), 'foo bar')
+    it 'should do nothing if the context does not exist', ->
+      name = 'foo @todays bar'
+      assert.equal(utils.removeContext(name, 'today'), name)
+    it 'should remove spacing before and after as appropriate', ->
+      name = 'foo @today bar'
+      assert.equal(utils.removeContext(name, 'today'), 'foo bar')
+      name = '@today bar'
+      assert.equal(utils.removeContext(name, 'today'), 'bar')
+      name = 'bar @today'
+      assert.equal(utils.removeContext(name, 'today'), 'bar')
+      name = '@today #week this was for this week'
+      assert.equal(utils.removeContext(name, 'today'), '#week this was for this week')
 
 
