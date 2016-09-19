@@ -129,7 +129,7 @@ module.exports = class Workflowy
     @meta || @refresh()
 
     unless !!search
-      condition = -> true
+      condition = if completed? then (-> true) else null
     else if _.isString search
       condition = (node) -> node.nm.indexOf(search) isnt -1
     else if _.isRegExp search
