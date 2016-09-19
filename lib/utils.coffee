@@ -90,8 +90,8 @@ module.exports = utils =
     name.replace(///(?:\s+\##{tag}\b|\##{tag}\s+|\##{tag}\b)///i,'')
 
   hasContext: (name, context) ->
-    context = '@' + context unless context.charAt(0) is '@'
-    ///#{context}\b///i.test name
+    context = context.replace /^@?(.*?):?$/, '$1'
+    ///@#{context}\b///i.test name
 
   addContext: (name, context) ->
     return name if utils.hasContext name, context
@@ -104,13 +104,48 @@ module.exports = utils =
 
     name + (if /\s$/.test(name) then '' else ' ') + context + (if addBold then endBold else '')
 
+  addBubbledContext: (name, context) ->
+    utils.addContext name, "#{context}#{if context.charAt(context.length-1) is ':' then '' else ':'}"
+
   removeContext: (name, context) ->
     context = context.substr(1) if context.charAt(0) is '@'
     name.replace(///(?:\s+@#{context}\b|@#{context}\s+|@#{context}\b)///i,'')
 
+  removeBubbledContext: (name, context) ->
+    context = context.replace /^@?(.*?):?$/, '$1'
+    name.replace(///(?:\s+@#{context}:|@#{context}:\s+|@#{context}:)///i,'')
+
   getContexts: (name) ->
     for str in (name||'').match(///@(\w+)\b///g) || []
       str.substr(1)
+
+  getBubbledContexts: (name) ->
+    for str in (name||'').match(///@(\w+):///g) || []
+      str.substr(1,str.length-2)
+
+  bubbleUpContexts: (name, node) ->
+    list = node.ch || []
+    newBubbled = Object.create null
+
+    i = -1
+    while ++i < list.length
+      childNode = list[i]
+      for ctx in utils.getContexts childNode.nm
+        newBubbled[ctx] = 1
+      if childNode.ch
+        list.push childNode.ch...
+
+    newBubbled = Object.keys newBubbled
+    allContexts = utils.getContexts name
+    currentBubbled = utils.getBubbledContexts name
+
+    for context in  _.difference currentBubbled, newBubbled
+      name = utils.removeBubbledContext name, context
+
+    for context in _.difference newBubbled, allContexts
+      name = utils.addBubbledContext name, context
+
+    name
 
   inheritedContexts: (node) ->
     contexts = Object.create null
