@@ -115,6 +115,9 @@ module.exports = utils =
     context = context.replace /^@?(.*?):?$/, '$1'
     name.replace(///(?:\s+@#{context}:|@#{context}:\s+|@#{context}:)///i,'')
 
+  getAllContexts: (name) ->
+    str.substr(1) for str in (name||'').match(///@(\w+)\b///g) || []
+
   getContexts: (name) ->
     str.substr(1) for str in (name||'').match(///@(\w+)(?!:)\b///g) || []
 
