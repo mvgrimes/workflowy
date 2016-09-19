@@ -116,8 +116,7 @@ module.exports = utils =
     name.replace(///(?:\s+@#{context}:|@#{context}:\s+|@#{context}:)///i,'')
 
   getContexts: (name) ->
-    for str in (name||'').match(///@(\w+)\b///g) || []
-      str.substr(1)
+    str.substr(1) for str in (name||'').match(///@(\w+)(?!:)\b///g) || []
 
   getBubbledContexts: (name) ->
     for str in (name||'').match(///@(\w+):///g) || []
@@ -136,13 +135,13 @@ module.exports = utils =
         list.push childNode.ch...
 
     newBubbled = Object.keys newBubbled
-    allContexts = utils.getContexts name
+    contexts = utils.getContexts name
     currentBubbled = utils.getBubbledContexts name
 
     for context in  _.difference currentBubbled, newBubbled
       name = utils.removeBubbledContext name, context
 
-    for context in _.difference newBubbled, allContexts
+    for context in _.difference newBubbled, contexts
       name = utils.addBubbledContext name, context
 
     name

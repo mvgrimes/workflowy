@@ -379,15 +379,13 @@ describe 'Workflowy utils', ->
   describe '#getContexts', ->
     it 'should return an array of all the contexts', ->
       arr = utils.getContexts "foo @bar @baz hello @world: yay @mundo"
-      assert.equal(arr.length, 4)
+      assert.equal(arr.length, 3)
       assert('bar' in arr)
       assert('baz' in arr)
-      assert('world' in arr)
       assert('mundo' in arr)
 
   describe '#inheritContexts', ->
-    it 'should return an array of all the contexts', ->
-
+    it 'should inherit all the (regular) contexts from ancestors', ->
       workflowy = proxy new Workflowy username, password
       workflowy.request.populate """
         - hello @bar
@@ -395,7 +393,7 @@ describe 'Workflowy utils', ->
             - and a final hello
         """
       workflowy.find().then (nodes) ->
-        assert.equal utils.inheritContexts(nodes[2].nm, nodes[2]), "and a final hello @baz @bar"
+        assert.equal utils.inheritContexts(nodes[2].nm, nodes[2]), "and a final hello @bar"
 
   describe '#getBubbledContexts', ->
     it 'should return an array of all the bubbled contexts', ->
@@ -410,7 +408,7 @@ describe 'Workflowy utils', ->
       workflowy.request.populate """
         - hello @bar @bazoo:
           - another @baz:
-            - and a final hello @hello
+            - and a final hello @baz @hello
         """
       workflowy.find().then (nodes) ->
         assert.equal utils.bubbleUpContexts(nodes[0].nm, nodes[0]), "hello @bar @baz: @hello:"
