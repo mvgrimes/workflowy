@@ -103,6 +103,27 @@ addChildrenTest = (workflowy) ->
         - 5
       """
 
+  # add at the botom of the doc with a high priority
+  .then ->
+    names = [1..10].map (num) -> ''+num
+    workflowy.addChildren names.map (name) -> {name}
+    .then -> workflowy.find()
+    .then (nodes) ->
+      # first 10 nodes should have the given names
+      for name,i in names
+        assert.equal(nodes[i].nm, names[i])
+
+      # now add a node with a crazy priority
+      workflowy.addChildren({name: 'at the bottom'},null, 1e6)
+    .then -> workflowy.find()
+    .then (nodes) ->
+      # first 10 nodes should still have the given names
+      for name,i in names
+        assert.equal(nodes[i].nm, names[i])
+
+      # last node is known
+      assert.equal(nodes[nodes.length-1].nm, 'at the bottom')
+
 
 shareIdTests = (useQuarantine) ->
   rootName = "Book list"
@@ -183,6 +204,7 @@ describe.skip 'Workflowy over the wire', ->
 
   describe '#addChildren', ->
     it 'should add child nodes where expected in the tree', ->
+      this.timeout(60000)
       workflowy = new Workflowy username, password, jar: fc
       workflowy.refresh()
       addChildrenTest workflowy
