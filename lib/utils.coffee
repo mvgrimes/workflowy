@@ -89,7 +89,7 @@ module.exports = utils =
 
   removeTag: (name, tag) ->
     tag = tag.substr(1) if tag.charAt(0) is '#'
-    name.replace(///(?:\s+\##{tag}\b|\##{tag}\s+|\##{tag}\b)///i,'')
+    name.replace(///(?:\s+\##{tag}(?:/\S+|\b)|\##{tag}(?:/\S+)?\s+|\##{tag}(?:/\S+|\b))///i,'')
 
   hasContext: (name, context) ->
     context = context.replace /^@?(.*?):?$/, '$1'
@@ -111,7 +111,7 @@ module.exports = utils =
 
   removeContext: (name, context) ->
     context = context.substr(1) if context.charAt(0) is '@'
-    name.replace(///(?:\s+@#{context}\b|@#{context}\s+|@#{context}\b)///i,'')
+    name.replace(///(?:\s+@#{context}(?:/\S+|\b)|@#{context}(?:/\S+)?\s+|@#{context}(?:/\S+|\b))///i,'')
 
   removeBubbledContext: (name, context) ->
     context = context.replace /^@?(.*?):?$/, '$1'

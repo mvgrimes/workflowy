@@ -329,7 +329,7 @@ describe 'Workflowy with proxy', ->
     it 'should add child nodes where expected in the tree', ->
       addChildrenTest workflowy
 
-describe 'Workflowy utils', ->
+describe.only 'Workflowy utils', ->
   describe '#addTag', ->
     it 'should add a tag if it does not exist', ->
       name = 'foo bar'
@@ -363,6 +363,18 @@ describe 'Workflowy utils', ->
       assert.equal(utils.removeTag(name, 'today'), 'bar')
       name = '#today #week this was for this week'
       assert.equal(utils.removeTag(name, 'today'), '#week this was for this week')
+    it 'should remove tags with metadata, stopping at the end of the data', ->
+      name = '#today #weekly/1/2 this was for this week'
+      assert.equal(utils.removeTag(name, 'weekly'), '#today this was for this week')
+      name = '#today #thursday/1p. this was for this week'
+      assert.equal(utils.removeTag(name, 'thursday'), '#today this was for this week')
+      name = '#today #thursday/1p/2.5h. this was for this week'
+      assert.equal(utils.removeTag(name, 'thursday'), '#today this was for this week')
+      name = 'hello world #today #thursday/1p/2.5h'
+      assert.equal(utils.removeTag(name, 'thursday'), 'hello world #today')
+      name = 'hello world #today #thursday/1p/2.5h.'
+      assert.equal(utils.removeTag(name, 'thursday'), 'hello world #today')
+
 
   describe '#addContext', ->
     it 'should add a context if it does not exist', ->
@@ -397,6 +409,11 @@ describe 'Workflowy utils', ->
       assert.equal(utils.removeContext(name, 'home'), 'bar')
       name = '@home #week this was for this week'
       assert.equal(utils.removeContext(name, 'home'), '#week this was for this week')
+    it 'should remove context with metadata', ->
+      name = '@home #week this was for this week @rating/1.5'
+      assert.equal(utils.removeContext(name, 'rating'), '@home #week this was for this week')
+      name = '@home #week this was for this week @rating/1.5 and more'
+      assert.equal(utils.removeContext(name, 'rating'), '@home #week this was for this week and more')
 
   describe '#getContexts', ->
     it 'should return an array of all the contexts', ->
