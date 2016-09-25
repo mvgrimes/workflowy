@@ -61,9 +61,11 @@ module.exports = utils =
         utils.applyToTree root.ch, method
     return
 
+  isBold: (name='') -> /^<b>/.test(name)
+
   makeBold: (name='', tf=true) ->
     if tf
-      if /^<b>/.test(name)
+      if utils.isBold name
         name
       else
         "<b>#{name}</b>"
