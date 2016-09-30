@@ -125,7 +125,7 @@ describe 'Workflowy with proxy', ->
               - not complete
             """
 
-  describe.only '#bold', ->
+  describe '#bold', ->
     it 'should make nodes not previously bold, bold', ->
       workflowy.find('top').then (nodes) ->
         workflowy.bold(nodes).then -> workflowyMatchesOutline """

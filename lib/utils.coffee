@@ -34,3 +34,9 @@ module.exports =
     addLines roots, 0
     lines.join '\n'
 
+  makeBold: (name='', tf=true) ->
+    if tf
+      "<b>#{name}</b>"
+    else
+      name.replace(/^<b>(.*?)<\/b>/,'$1')
+

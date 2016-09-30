@@ -150,15 +150,10 @@ module.exports = class Workflowy
     nodes = [nodes] unless _.isArray nodes
     nodes = nodes.filter (node) -> /^<b>/.test(node.nm||'') isnt tf
 
-    if tf
-      modify = (name) -> name = "<b>#{name}</b>"
-    else
-      modfiy = (name) -> (name||'').replace(/^<b>(.*?)<\/b>/,'$1')
-
     operations = for node in nodes
       type: 'edit'
-      data: 
-        name: modify(node.nm)
+      data:
+        name: utils.makeBold(node.nm,tf)
         projectid: node.id
       undo_data:
         previous_last_modified: node.lm
