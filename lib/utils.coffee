@@ -34,6 +34,17 @@ module.exports =
     addLines roots, 0
     lines.join '\n'
 
+  flattenTree: (roots) ->
+    result = []
+    addChildren = (arr, parentId) ->
+      for child in arr
+        child.parentId = parentId
+        result.push child
+        addChildren children, child.id if children = child.ch
+      return
+    addChildren roots, 'None'
+    result
+
   makeBold: (name='', tf=true) ->
     if tf
       "<b>#{name}</b>"

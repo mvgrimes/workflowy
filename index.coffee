@@ -54,23 +54,13 @@ module.exports = class Workflowy
         console.error "Error fetching document root:", err
         throw err
 
-    @outline = @meta.then (body) =>
+    @roots = @meta.then (body) =>
       meta = body.projectTreeData.mainProjectTreeInfo
       @_lastTransactionId = meta.initialMostRecentOperationTransactionId
       meta.rootProjectChildren
 
-    @nodes = @outline.then (outline) =>
-      result = []
-
-      addChildren = (arr, parentId) ->
-        for child in arr
-          child.parentId = parentId
-          result.push child
-          addChildren children, child.id if children = child.ch
-        return
-
-      addChildren outline, 'None'
-      result
+    @nodes = @roots.then (roots) =>
+      utils.flattenTree roots
 
   _update: (operations) ->
     @meta.then (meta) =>
