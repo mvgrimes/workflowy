@@ -26,6 +26,7 @@ module.exports = class Workflowy
     @_lastTransactionId = null
     @shareId = utils.parseShareId(shareId)
     @urls = makeUrls(this)
+    @stopping = false
 
   use: (module, options={}) -> module this, options; this
   plugins: {}
@@ -35,8 +36,10 @@ module.exports = class Workflowy
     return
 
   stop: ->
-    @jar?.close?()
-    plugin?.stop?() for name, plugin of @plugins
+    unless @stopping
+      @stopping = true
+      @jar?.close?()
+      plugin?.stop?() for name, plugin of @plugins
     return
 
   ###
