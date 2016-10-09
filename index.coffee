@@ -36,11 +36,7 @@ module.exports = class Workflowy
     return
 
   stop: ->
-    unless @stopping
-      @stopping = true
-      @jar?.close?()
-      plugin?.stop?() for name, plugin of @plugins
-    return
+    @stopping ||= Q.all([@jar?.close?()].concat(plugin?.stop?() for name, plugin of @plugins))
 
   ###
   # takes a shareId or a share URL, such as <https://workflowy.com/s/BtARFRlTVt>
