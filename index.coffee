@@ -7,7 +7,7 @@ util = require 'util'
 
 # decorate request module
 request.use = (module,options) -> module this,options; this
-# request.use require('request-debug')
+request.use require('./lib/request-debug')
 request.use require('./lib/request-throttle'), millis: 1000
 
 makeUrls = (workflowy) ->
@@ -27,16 +27,16 @@ module.exports = class Workflowy
     @shareId = utils.parseShareId(shareId)
     @urls = makeUrls(this)
     @stopping = false
+    @plugins = {}
 
   use: (module, options={}) -> module this, options; this
-  plugins: {}
 
   start: ->
     plugin?.start?() for name, plugin of @plugins
     return
 
   stop: ->
-    @stopping ||= Q.all([@jar?.close?()].concat(plugin?.stop?() for name, plugin of @plugins))
+    @stopping ||= Q.all(plugin?.stop?() for name, plugin of @plugins)
 
   ###
   # takes a shareId or a share URL, such as <https://workflowy.com/s/BtARFRlTVt>
