@@ -248,6 +248,25 @@ describe 'Workflowy with proxy', ->
         assert.equal(nodes[5].nm, 'bar')
         assert.equal(nodes[6].nm, 'not complete')
 
+  describe '#update', ->
+    it 'should allow passing an object mapping node id to new name', ->
+      id = null
+      workflowy.find('and another').then (nodes) ->
+        console.log id = nodes[0].id
+        map = {}; map[id] = "a new name"
+        workflowy.update(nodes[0], map).then -> workflowyMatchesOutline """
+          - foo
+            - <b>bold</b> #today
+              - a new name
+              - or another
+              - a final entry
+          - bar
+            - [COMPLETE] baz
+            - [COMPLETE] boo
+          - [COMPLETE] top complete
+            - not complete
+          """
+
   describe '#complete', ->
     it 'should mark as complete the passed nodes', ->
       workflowy.find('another').then (nodes) ->
@@ -329,7 +348,7 @@ describe 'Workflowy with proxy', ->
     it 'should add child nodes where expected in the tree', ->
       addChildrenTest workflowy
 
-describe.only 'Workflowy utils', ->
+describe 'Workflowy utils', ->
   describe '#addTag', ->
     it 'should add a tag if it does not exist', ->
       name = 'foo bar'

@@ -181,7 +181,7 @@ module.exports = class Workflowy
           previous_name: ''
 
     @_update operations
-    .then =>
+    .then ([resp,body,timestamp]) =>
       @refresh()
       return
 
@@ -256,30 +256,33 @@ module.exports = class Workflowy
 
       return
 
+  ##
+  # newNames is either an array of names corresponding to each node or an
+  # object mapping node id to name. both args can also be strings to apply to
+  # one node.
+  # @returns the new lm value for the updated nodes
+  ##
   update: (nodes, newNames) ->
     @meta || @refresh()
 
     unless _.isArray nodes
       nodes = [nodes]
-      newNames = [newNames]
+      newNames = [newNames] if _.isString(newNames)
 
-    return Q() unless nodes.length > 0
+    return Q(0) unless nodes.length > 0
 
     operations = for node, i in nodes
       type: 'edit',
       data:
         projectid: node.id
-        name: newNames[i]
+        name: newNames[i] ? newNames[node.id]
       undo_data:
         previous_last_modified: node.lm
         previous_name: node.nm
 
-    if operations.length > 0
-      @_update operations
-      .then ([resp,body,timestamp]) =>
-        for node, i in nodes
-          node.nm = newNames[i]
-          node.lm = timestamp
-        return
-    else
-      @meta
+    @_update operations
+    .then ([resp,body,timestamp]) =>
+      for node, i in nodes
+        node.nm = newNames[i] ? newNames[node.id]
+        node.lm = timestamp
+      timestamp
