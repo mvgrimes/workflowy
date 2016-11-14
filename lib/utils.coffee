@@ -73,11 +73,11 @@ module.exports = utils =
       name.replace(/^<b>(.*?)<\/b>/,'$1')
 
   hasTag: (name, tag) ->
-    tag = '#' + tag unless tag.charAt(0) is '#'
-    ///#{tag}\b///i.test name
+    tag = tag.replace /^#|\/.*$/g, ''
+    ///\##{tag}\b///i.test name
 
   addTag: (name, tag) ->
-    return name if utils.hasTag name, tag
+    return utils.replaceTag(name,tag,tag) if utils.hasTag name, tag
     tag = '#' + tag unless tag.charAt(0) is '#'
 
     addBold = false
@@ -87,9 +87,23 @@ module.exports = utils =
 
     name + (if /\s$/.test(name) then '' else ' ') + tag + (if addBold then endBold else '')
 
+
   removeTag: (name, tag) ->
     tag = tag.substr(1) if tag.charAt(0) is '#'
-    name.replace(///(?:\s+\##{tag}(?:/\S+|\b)|\##{tag}(?:/\S+)?\s+|\##{tag}(?:/\S+|\b))///i,'')
+    name.replace(///(?:\s+\##{tag}(?:/\S*[\d\w]|\b)|\##{tag}(?:/\S*[\d\w])?\s+|\##{tag}(?:/\S*[\d\w]|\b))///i,'')
+
+  replaceTag: (name, oldTag, newTag) ->
+    return utils.addTag(name, newTag) unless utils.hasTag name, oldTag
+    oldTag = oldTag.replace /^#|\/.*$/g, ''
+    newTag = newTag.substr(1) if newTag.charAt(0) is '#'
+    includeSuffix = !('/' in newTag)
+    regex = ///(?:
+      (\s+)\##{oldTag}(/\S*[\d\w]|\b) | 
+      \##{oldTag}(/\S*[\d\w])?(\s+) | 
+      \##{oldTag}(/\S*[\d\w]|\b)
+    )///i
+    suffix = if includeSuffix then "$2$3$5" else ''
+    name.replace(regex, "$1\##{newTag}#{suffix}$4")
 
   hasContext: (name, context) ->
     context = context.replace /^@?(.*?):?$/, '$1'
