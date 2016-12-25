@@ -209,11 +209,11 @@ describe.skip 'Workflowy over the wire', ->
       workflowy.refresh()
       addChildrenTest workflowy
 
-  describe.skip 'with a shareId in constructor', ->
-    shareIdTests false
+  # describe.skip 'with a shareId in constructor', ->
+  #   shareIdTests false
 
-  describe.skip '#quarantine', ->
-    shareIdTests true
+  # describe.skip '#quarantine', ->
+  #   shareIdTests true
 
 describe 'Workflowy with proxy', ->
   beforeEach ->
@@ -252,7 +252,7 @@ describe 'Workflowy with proxy', ->
     it 'should allow passing an object mapping node id to new name', ->
       id = null
       workflowy.find('and another').then (nodes) ->
-        console.log id = nodes[0].id
+        id = nodes[0].id
         map = {}; map[id] = "a new name"
         workflowy.update(nodes[0], map).then -> workflowyMatchesOutline """
           - foo
@@ -386,13 +386,13 @@ describe 'Workflowy utils', ->
       name = '#today #weekly/1/2 this was for this week'
       assert.equal(utils.removeTag(name, 'weekly'), '#today this was for this week')
       name = '#today #thursday/1p. this was for this week'
-      assert.equal(utils.removeTag(name, 'thursday'), '#today this was for this week')
+      assert.equal(utils.removeTag(name, 'thursday'), '#today. this was for this week')
       name = '#today #thursday/1p/2.5h. this was for this week'
-      assert.equal(utils.removeTag(name, 'thursday'), '#today this was for this week')
+      assert.equal(utils.removeTag(name, 'thursday'), '#today. this was for this week')
       name = 'hello world #today #thursday/1p/2.5h'
       assert.equal(utils.removeTag(name, 'thursday'), 'hello world #today')
       name = 'hello world #today #thursday/1p/2.5h.'
-      assert.equal(utils.removeTag(name, 'thursday'), 'hello world #today')
+      assert.equal(utils.removeTag(name, 'thursday'), 'hello world #today.')
 
 
   describe '#addContext', ->
