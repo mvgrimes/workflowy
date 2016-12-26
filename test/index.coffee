@@ -344,6 +344,92 @@ describe 'Workflowy with proxy', ->
             - a final entry
         - bar
         """
+    it 'should return the same outline when there are notes', ->
+      workflowyWithNote = proxy new Workflowy username, password
+      workflowyWithNote.request.populate newText = '''
+        - parent
+          | parent note
+          | parent line 2
+          - child
+            | child note 1
+            |    child note 2
+            | child 3
+            - grandchild 1
+            - grandchild 2
+        '''
+      workflowyWithNote.asText().then (text) ->
+        assert.equal text, newText
+  describe '#populate', ->
+    it 'should handle the description field (notes)', ->
+      workflowyWithNote = proxy new Workflowy username, password
+      workflowyWithNote.request.populate '''
+        - top item
+          | here's a note associated with the item
+        '''
+      workflowyWithNote.find()
+        .then (nodes) ->
+          assert.equal nodes.length, 1
+          node = nodes[0]
+          assert.equal !!node.cp, false
+          assert.equal node.nm, 'top item'
+          assert.equal node.no, '''here's a note associated with the item'''
+
+    it 'should handle multi-line notes and lines with spaces', ->
+      workflowyWithNote = proxy new Workflowy username, password
+      workflowyWithNote.request.populate '''
+        - top item
+          | here's a note associated with the item
+          | here's a second line on the same note
+          |   a third line that's indented
+        '''
+      workflowyWithNote.find()
+        .then (nodes) ->
+          assert.equal nodes.length, 1
+          node = nodes[0]
+          assert.equal !!node.cp, false
+          assert.equal node.nm, 'top item'
+          assert.equal node.no, '''here's a note associated with the item\nhere's a second line on the same note\n  a third line that's indented'''
+    it 'should handle notes on child nodes', ->
+      workflowyWithNote = proxy new Workflowy username, password
+      workflowyWithNote.request.populate '''
+        - parent
+          | parent note
+          | parent line 2
+          - child
+            | child note 1
+            |    child note 2
+            | child 3
+            - grandchild 1
+            - grandchild 2
+        '''
+      workflowyWithNote.find()
+        .then (nodes) ->
+          assert.equal nodes.length, 4
+          parent = nodes[0]
+          child = nodes[1]
+          grandchild1 = nodes[2]
+          grandchild2 = nodes[3]
+
+          assert.equal child.parentId, parent.id
+          assert.equal grandchild1.parentId, child.id
+          assert.equal grandchild2.parentId, child.id
+
+          assert.equal parent.ch.length, 1
+          assert.equal parent.ch[0], child
+          assert.equal child.ch.length, 2
+          assert.equal child.ch[0], grandchild1
+          assert.equal child.ch[1], grandchild2
+
+          assert.equal parent.nm, 'parent'
+          assert.equal child.nm, 'child'
+          assert.equal grandchild1.nm, 'grandchild 1'
+          assert.equal grandchild2.nm, 'grandchild 2'
+
+          assert.equal parent.no, 'parent note\nparent line 2'
+          assert.equal child.no, 'child note 1\n   child note 2\nchild 3'
+          assert.equal !!grandchild1.no, false
+          assert.equal !!grandchild2.no, false
+
   describe '#addChildren', ->
     it 'should add child nodes where expected in the tree', ->
       addChildrenTest workflowy

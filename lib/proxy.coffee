@@ -37,14 +37,15 @@ module.exports = (workflowy) ->
   request.populate = (outline, tab = "  ") ->
     tree = []
     parents = []
-    makeNode = (line) ->
-      m = line.match ///^((#{tab})*)-\x20(\[COMPLETE\]\x20)?(.*$)///
+    nodeRegex = ///((?:#{tab})*)-\x20(\[COMPLETE\]\x20)?(.*)(?:\r?\n|$)((?:\1\x20\x20\|\x20.*(?:\r?\n|$))*)///
+    makeNode = (m) ->
       depth = m[1].length//tab.length
       node =
         lm: 67919370,
         id: utils.makeNodeId()
-        nm: m[4]
-      node.cp = 67919370 if m[3]
+        nm: m[3]
+      node.cp = 67919370 if m[2]
+      node.no = m[4].replace(///^#{m[1]}\x20\x20\|\x20///g,'').replace(///\r?\n#{m[1]}\x20\x20\|\x20///g, '\n').replace(/\r?\n$/,'') if m[4]
 
       if depth is 0
         tree.push node
@@ -54,7 +55,10 @@ module.exports = (workflowy) ->
       parents[depth] = node
       node
 
-    makeNode(line) for line in outline.split(/\r?\n/g)
+    while outline and m = nodeRegex.exec outline
+      outline = outline.substr m[0].length
+      makeNode m
+
     return
 
   findNodePath = (id) ->

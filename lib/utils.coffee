@@ -37,6 +37,8 @@ module.exports = utils =
     addLines = (nodes, depth) ->
       for node in nodes
         lines.push _.repeat(tab, depth) + "- " + (if node.cp then "[COMPLETE] " else "") + node.nm
+        if node.no
+          lines.push _.repeat(tab, depth) + "  | " + node.no.replace(/\r?\n/g,"\n#{_.repeat(tab, depth)}" + "  | ")
         addLines node.ch, depth+1 if node.ch
       return
     addLines roots, 0
