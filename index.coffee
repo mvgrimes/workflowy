@@ -258,9 +258,12 @@ module.exports = class Workflowy
   # newNames is either an array of names corresponding to each node or an
   # object mapping node id to name. both args can also be strings to apply to
   # one node.
+  #
+  # newNotes is similarly structured
+  #
   # @returns the new lm value for the updated nodes
   ##
-  update: (nodes, newNames) ->
+  update: (nodes, newNames={}, newNotes={}) ->
     @meta || @refresh()
 
     unless _.isArray nodes
@@ -274,6 +277,7 @@ module.exports = class Workflowy
       data:
         projectid: node.id
         name: newNames[i] ? newNames[node.id]
+        description: newNotes[i] ? newNotes[node.id]
       undo_data:
         previous_last_modified: node.lm
         previous_name: node.nm
@@ -282,5 +286,6 @@ module.exports = class Workflowy
     .then ([resp,body,timestamp]) =>
       for node, i in nodes
         node.nm = newNames[i] ? newNames[node.id]
+        node.no = newNotes[i] ? newNotes[node.id] ? node.no
         node.lm = timestamp
       timestamp

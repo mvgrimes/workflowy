@@ -180,6 +180,16 @@ module.exports = utils =
       name = utils.addContext name, context
     name
 
+  visitTree: (nodes, fn) ->
+    return unless nodes
+    nodes = [nodes] unless _.isArray nodes
 
+    visit = (n) ->
+      fn n
+      visit child for child,i in n.ch if n.ch
+      return
+
+    visit node for node in nodes
+    return
 
 
