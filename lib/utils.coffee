@@ -134,14 +134,14 @@ module.exports = utils =
     name.replace(///(?:\s+@#{context}:|@#{context}:\s+|@#{context}:)///i,'')
 
   getAllContexts: (name) ->
-    str.substr(1) for str in (name||'').match(///@(\w+)\b///g) || []
+    (str.substr(1) for str in (name||'').match(///@(\w+)\b///g) || []).map _.toLower
 
   getContexts: (name) ->
-    str.substr(1) for str in (name||'').match(///@(\w+)(?!:)\b///g) || []
+    (str.substr(1) for str in (name||'').match(///@(\w+)(?!:)\b///g) || []).map _.toLower
 
   getBubbledContexts: (name) ->
     for str in (name||'').match(///@(\w+):///g) || []
-      str.substr(1,str.length-2)
+      str.substr(1,str.length-2).toLowerCase()
 
   bubbleUpContexts: (name, node) ->
     list = node.ch || []
