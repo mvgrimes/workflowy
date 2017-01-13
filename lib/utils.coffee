@@ -15,6 +15,9 @@ module.exports = utils =
   makePollId: ->
     _.sampleSize('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('')
 
+  getUrl: (node) ->
+    "https://workflowy.com/#/#{(''+node.id).replace(/.*-/,'')}"
+
   checkForErrors: ([resp, body]) ->
     if 300 <= resp.statusCode < 600
       throw new Error "Error with request #{resp.request.uri.href}: #{resp.statusCode}"
