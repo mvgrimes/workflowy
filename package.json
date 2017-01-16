@@ -24,9 +24,8 @@
   "dependencies": {
     "debug": "^2.2.0",
     "lodash": "^4.15.0",
-    "q": "^1.1.2",
-    "request": "^2.74.0",
-    "request": "mikerobe/request#master",
+    "q": "^1.4.1",
+    "reqrap": "mikerobe/reqrap#master",
     "tough-cookie": "^0.12.1"
   },
   "devDependencies": {

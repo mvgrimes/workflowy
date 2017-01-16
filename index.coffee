@@ -1,12 +1,12 @@
 _ = require 'lodash'
 Q = require 'q'
 debug = require('debug')('workflowy')
-request = require 'request'
+request = require 'reqrap'
 utils = require './lib/utils'
 util = require 'util'
 
-request.use require('request/debug'), name: 'workflowy-request'
-request.use require('request/throttle'), millis: 1000
+request.use require('reqrap/debug'), name: 'workflowy-request'
+request.use require('reqrap/throttle'), millis: 1000
 
 makeUrls = (workflowy) ->
   {
