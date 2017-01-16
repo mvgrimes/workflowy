@@ -16,7 +16,9 @@ module.exports = utils =
     _.sampleSize('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('')
 
   getUrl: (node) ->
-    "https://workflowy.com/#/#{(''+node.id).replace(/.*-/,'')}"
+    "https://workflowy.com/#/#{utils.getSegmentId node}"
+
+  getSegmentId: (node) -> (''+node.id).replace(/.*-/,'')
 
   checkForErrors: ([resp, body]) ->
     if 300 <= resp.statusCode < 600
