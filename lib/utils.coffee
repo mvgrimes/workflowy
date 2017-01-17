@@ -94,6 +94,8 @@ module.exports = utils =
 
     name + (if /\s$/.test(name) then '' else ' ') + tag + (if addBold then endBold else '')
 
+  removeTags: (name) ->
+    name.replace(///(?:\s+\#\w+(?:/\S*[\d\w]|\b)|\#\w+(?:/\S*[\d\w])?\s+|\#\w+(?:/\S*[\d\w]|\b))///ig,'')
 
   removeTag: (name, tag) ->
     tag = tag.substr(1) if tag.charAt(0) is '#'
