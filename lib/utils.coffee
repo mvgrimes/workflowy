@@ -23,7 +23,7 @@ module.exports = utils =
   checkForErrors: ([resp, body]) ->
     if 300 <= resp.statusCode < 600
       throw new Error "Error with request #{resp.request.uri.href}: #{resp.statusCode}"
-    if error = body.error
+    if error = body?.error
       throw new Error "Error with request #{resp.request.uri.href}: #{error}"
     return
 
