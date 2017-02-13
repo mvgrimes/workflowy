@@ -82,7 +82,7 @@ module.exports = utils =
 
   hasTag: (name, tag) ->
     tag = tag.replace /^#|\/.*$/g, ''
-    ///\##{tag}\b///i.test name
+    ///\#(#{tag}(?:/\S*[\d\w]|\b))///i.exec name
 
   addTag: (name, tag) ->
     return utils.replaceTag(name,tag,tag) if utils.hasTag name, tag
