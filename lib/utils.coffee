@@ -1,4 +1,5 @@
 _ = require 'lodash'
+cheerio = require 'cheerio'
 
 endBold = '</b>'
 
@@ -96,6 +97,9 @@ module.exports = utils =
 
   removeTags: (name) ->
     name.replace(///(?:\s+\#\w+(?:/\S*[\d\w]|\b)|\#\w+(?:/\S*[\d\w])?\s+|\#\w+(?:/\S*[\d\w]|\b))///ig,'')
+
+  removeHtml: (name) ->
+    cheerio.load(name).text()
 
   removeTag: (name, tag) ->
     tag = tag.substr(1) if tag.charAt(0) is '#'
