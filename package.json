@@ -2,9 +2,11 @@
   "name": "workflowy",
   "version": "1.10.1",
   "description": "Workflowy.com JSON API wrapper for node",
-  "main": "index.coffee",
+  "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/mocha"
+    "test": "node_modules/.bin/mocha",
+    "compile": "coffee -c index.coffee lib/*.coffee",
+    "compile:watch": "coffee -c -w index.coffee lib/*.coffee"
   },
   "repository": {
     "type": "git",
