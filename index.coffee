@@ -18,9 +18,16 @@ makeUrls = (workflowy) ->
 module.exports = class Workflowy
   @clientVersion: 18
 
-  constructor: (@username, @password, {jar, shareId} = {}) ->
+  constructor: ( auth, {jar, shareId} = {}) ->
     @jar = if jar then request.jar(jar) else request.jar()
     @request = request.defaults {@jar, json: true}
+
+    if auth.sessionid
+      @sessionid = auth.sessionid
+    else
+      @username = auth.username
+      @password = auth.password
+
     @_lastTransactionId = null
     @shareId = utils.parseShareId(shareId)
     @urls = makeUrls(this)
@@ -70,10 +77,18 @@ module.exports = class Workflowy
         throw err
 
   refresh: ->
+    if @sessionid
+      headers = {
+        Cookie: 'sessionid=' + @sessionid
+      }
+    else
+      headers = {}
+
     meta = =>
       Q.ninvoke @request,
         'get'
         url: @urls.meta
+        headers: headers
       .then ([resp,body]) ->
         utils.checkForErrors arguments...
         body
@@ -99,9 +114,31 @@ module.exports = class Workflowy
 
       operation.client_timestamp ?= timestamp for operation in operations
 
+      console.log( {
+        url: @urls.update
+        form:
+          client_id: clientId
+          share_id: @shareId
+          client_version: Workflowy.clientVersion
+          push_poll_id: utils.makePollId()
+          push_poll_data: JSON.stringify [
+            share_id: @shareId
+            most_recent_operation_transaction_id: @_lastTransactionId
+            operations: operations
+          ]
+      } )
+
+      if @sessionid
+        headers = {
+          Cookie: 'sessionid=' + @sessionid
+        }
+      else
+        headers = {}
+
       Q.ninvoke @request,
         'post'
         url: @urls.update
+        headers: headers
         form:
           client_id: clientId
           share_id: @shareId
